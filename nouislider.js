@@ -10,6 +10,7 @@ angular.module('ya.nouislider', []).value('noUiSliderConfig', {}).directive('noU
     require: 'ngModel',
     scope: {
       noUiSlider: '=',
+      noUiSliderLib: '=',
       noUiSliderEvents: '='
     },
     link: function(scope, element, attrs, ngModel) {
@@ -22,11 +23,12 @@ angular.module('ya.nouislider', []).value('noUiSliderConfig', {}).directive('noU
 
       function tryToInit() {
         var value = ngModel.$viewValue,
-          options = angular.extend({}, noUiSliderConfig, scope.noUiSlider, {start: value})
+          options = angular.extend({}, noUiSliderConfig, scope.noUiSlider, {start: value}),
+          noUiSlider = scope.noUiSliderLib ? scope.noUiSliderLib : window.noUiSlider;
         if (angular.isDefined(options.start) && angular.isDefined(options.range)) {
-          element.noUiSlider(options, initialized)
           previousValue = angular.copy(value)
-          if (!initialized)
+          if (!initialized) {
+            noUiSlider.create(element[0], options);
             angular.forEach(scope.noUiSliderEvents, function(handler, event) {
               element.on(event + '.noUiSlider', handler);
             });
@@ -34,6 +36,7 @@ angular.module('ya.nouislider', []).value('noUiSliderConfig', {}).directive('noU
               ngModel.$setViewValue(value)
               scope.$apply()
             })
+          }
           initialized = true
         }
       }
