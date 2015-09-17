@@ -35,3 +35,5 @@ Also, one can boost the performance by triggering the update only on `change` (d
 ```html
 <div no-ui-slider='options' ng-ui-slider-trigger='change' ng-model='values' ng-model-options='{ debounce: 500 }'></div>
 ```
+
+Field can be disabled with `ng-disabled='true'`

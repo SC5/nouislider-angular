@@ -9,6 +9,7 @@ angular.module('ya.nouislider', []).value('noUiSliderConfig', {}).directive('noU
     restrict: 'A',
     require: 'ngModel',
     scope: {
+      ngDisabled: '=',
       noUiSlider: '=',
       noUiSliderLib: '=',
       noUiSliderEvents: '=',
@@ -20,16 +21,13 @@ angular.module('ya.nouislider', []).value('noUiSliderConfig', {}).directive('noU
         element = elements[0];
 
       scope.$on('$destroy', function() {
-        elements.off('slide.noUiSlider set.noUiSlider change.noUiSlider');
+        element.noUiSlider.off('slide set change update');
       });
 
       function tryToInit() {
         var value = ngModel.$viewValue,
           options = angular.extend({}, noUiSliderConfig, scope.noUiSlider, {start: value}),
           noUiSlider = scope.noUiSliderLib ? scope.noUiSliderLib : window.noUiSlider;
-
-        console.log('init value', value);
-
         if (angular.isDefined(options.start) && angular.isDefined(options.range)) {
           previousValue = angular.copy(value);
           if (!initialized) {
@@ -38,7 +36,7 @@ angular.module('ya.nouislider', []).value('noUiSliderConfig', {}).directive('noU
               element.noUiSlider.on(event, handler);
             });
             element.noUiSlider.on((scope.noUiSliderTrigger || 'update'), function(value) {
-              // NOTE: Reading the value with .get() because handler always returns an array
+              // NOTE: Reading the value using .get() because handler always returns an array
               value = element.noUiSlider.get();
               var valueIsArray = angular.isArray(value);
               if (valueIsArray) value = value[0];
@@ -47,13 +45,18 @@ angular.module('ya.nouislider', []).value('noUiSliderConfig', {}).directive('noU
               newValue = valueIsArray ? [value] : value;
 
               ngModel.$setViewValue(newValue);
-            })
+            });
+            // Disable the field per request
+            element.removeAttribute('disabled');
+            if (scope.ngDisabled) {
+              element.setAttribute('disabled', true);
+            }
           }
           initialized = true;
         }
       }
 
-      ngModel.$render = function(setValue) {
+      ngModel.$render = function() {
         if (!initialized) return
         var value = ngModel.$viewValue,
           newValue = undefined
@@ -77,8 +80,6 @@ angular.module('ya.nouislider', []).value('noUiSliderConfig', {}).directive('noU
           newValue = valueIsArray ? [value] : value
           ngModel.$setViewValue(newValue);
         }
-        // FIXME: This is required for bi-directional value setting,
-        // but it slows down the UI
         element.noUiSlider.set(newValue);
       }
 
@@ -91,8 +92,7 @@ angular.module('ya.nouislider', []).value('noUiSliderConfig', {}).directive('noU
       scope.$watch(function() {
         return ngModel.$viewValue
       }, function() {
-        //console.log('value changed in watch!');
-        ngModel.$render(true)
+        ngModel.$render()
       }, true)
 
       scope.$watch(function() {
